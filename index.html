@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Щоденник тренувань</title>
+<meta name="theme-color" content="#1a1a1a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1a1a1a">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&subset=cyrillic&display=swap');
+  :root{
+    --bg:#1a1a1a; --card:#262626; --card2:#303030; --line:#4a4a4a;
+    --text:#ffffff; --dim:#d2d2cd; --mute:#9a9a95;
+    --y:#e8b400; --ink:#111111; --red:#ff6b5e; --green:#7ddc7a;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100%}
+  body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text);padding-bottom:96px;font-size:16px;font-variant-numeric:tabular-nums}
+  button{font-family:inherit;cursor:pointer}
+  input,textarea{font-family:inherit}
+  .head{font-family:'Montserrat',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-.01em}
+  .mono{font-family:'Montserrat',sans-serif}
+  .wrap{max-width:520px;margin:0 auto}
+
+  .top{padding:26px 18px 14px}
+  .top .eb{font:700 11px 'Montserrat',sans-serif;color:var(--y);letter-spacing:.06em}
+  .top h1{font-size:28px;margin-top:6px}
+  main{padding:0 16px}
+  .tab{display:none}.tab.on{display:block}
+
+  .btn{display:block;width:100%;padding:18px;border:none;border-radius:6px;background:var(--y);color:var(--ink);
+    font-family:'Montserrat',sans-serif;font-weight:800;text-transform:uppercase;font-size:16px}
+  .btn.ghost{background:transparent;color:var(--text);border:2px solid var(--line);font-size:14px;padding:14px}
+  .btn.small{padding:12px;font-size:13px}
+  .link{background:none;border:none;color:var(--dim);text-decoration:underline;font-size:14px;padding:8px 0}
+  .lbl{font:700 11px 'Montserrat',sans-serif;color:var(--mute);letter-spacing:.06em;margin:20px 2px 8px}
+
+  .card{background:var(--card);border:2px solid #333;border-left:4px solid var(--y);border-radius:6px;padding:15px;margin-bottom:12px}
+  .card .t{font-weight:700;font-size:17px}
+  .card .s{font-size:13px;color:var(--mute);margin-top:3px}
+  .stats{display:flex;gap:10px;margin:14px 0 4px}
+  .stat{flex:1;background:var(--card);border:2px solid #333;border-radius:6px;padding:12px}
+  .stat b{display:block;font:800 26px 'Montserrat',sans-serif;color:var(--y)}
+  .stat span{font-size:12px;color:var(--mute)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{font:600 13px 'Montserrat',sans-serif;background:var(--card2);padding:6px 10px;border-radius:4px;color:#fff}
+  .chip small{color:var(--mute);font-size:11px}
+  .exname{font-weight:700;font-size:16px;margin-top:12px}
+  .exname:first-of-type{margin-top:6px}
+  .pr{display:inline-block;margin-top:12px;font:800 11px 'Montserrat',sans-serif;background:var(--y);color:var(--ink);padding:5px 10px;transform:skewX(-6deg)}
+  .sample{font:700 10px 'Montserrat',sans-serif;color:var(--mute);border:1px solid var(--line);padding:2px 6px;border-radius:3px;margin-left:6px}
+  .empty{text-align:center;color:var(--mute);padding:34px 16px;line-height:1.6;font-size:15px}
+  .comment{margin-top:12px;font-size:14px;color:var(--dim);line-height:1.5;border-top:1px solid #3a3a3a;padding-top:10px}
+  .feelbadge{float:right;font-size:13px;color:var(--dim);background:var(--card2);padding:4px 9px;border-radius:4px}
+
+  .nav{position:fixed;bottom:0;left:0;right:0;z-index:80;display:flex;background:#111;border-top:2px solid #333;padding:8px 8px calc(env(safe-area-inset-bottom) + 8px)}
+  .nav button{flex:1;background:none;border:none;color:var(--mute);padding:8px 4px;border-radius:6px;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .nav button b{font-size:20px;line-height:1}
+  .nav button span{font:700 10px 'Montserrat',sans-serif;letter-spacing:.04em}
+  .nav button.on{background:var(--y);color:var(--ink)}
+
+  .media{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .thumb{width:82px;height:82px;border-radius:6px;overflow:hidden;position:relative;background:#111;border:2px solid #3a3a3a}
+  .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;background:rgba(0,0,0,.25)}
+  .thumb .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.75);color:#fff;font-size:12px;z-index:2}
+  #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:900;display:none;align-items:center;justify-content:center;padding:16px}
+  #lightbox img,#lightbox video{max-width:100%;max-height:100%;border-radius:6px}
+
+  .ov{position:fixed;inset:0;background:var(--bg);display:none;overflow-y:auto}
+  #entryOv{z-index:250;padding-bottom:40px}
+  #doneOv{z-index:400;align-items:center;justify-content:center;text-align:center;padding:24px}
+  .ovhead{position:sticky;top:0;z-index:5;background:#000;padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--y)}
+  .ovhead button{background:none;border:none;color:#fff;font-size:15px;font-weight:700}
+  .ovhead .mid{font:700 11px 'Montserrat',sans-serif;color:var(--mute);letter-spacing:.05em}
+  .ovbody{padding:18px 16px;max-width:520px;margin:0 auto}
+  .field{width:100%;background:var(--card);border:2px solid var(--line);color:var(--text);padding:14px;border-radius:6px;font-size:16px}
+  .field:focus{outline:none;border-color:var(--y)}
+  textarea.field{min-height:90px;resize:vertical;line-height:1.5}
+  textarea.big{min-height:220px;font:500 16px/1.6 'Montserrat',sans-serif}
+  .hint{font-size:14px;color:var(--dim);margin:8px 0;line-height:1.55}
+  .hint b{color:var(--y);font-family:'Montserrat',sans-serif;font-weight:700}
+  .helpbox{background:var(--card);border:2px dashed var(--line);border-radius:6px;padding:12px 14px;margin-top:10px;font-size:14px;color:var(--dim);line-height:1.7}
+  .helpbox code{font:600 13px 'Montserrat',sans-serif;color:var(--y);display:block}
+  .pv{background:var(--card);border:2px solid #333;border-left:4px solid var(--green);border-radius:6px;padding:13px;margin-bottom:10px}
+  .pv .n{font-weight:700;font-size:16px}
+  .pv .k{font-size:12px;color:var(--mute);margin-left:6px;font-weight:500}
+  .warn{background:#2a2410;border:2px solid var(--y);border-radius:6px;padding:12px 14px;margin-bottom:10px;font-size:14px;color:var(--dim);line-height:1.6}
+  .warn b{color:var(--y)}
+  .note{background:var(--card);border:2px solid #333;border-radius:6px;padding:12px 14px;margin-bottom:10px;font-size:14px;color:var(--dim)}
+  .attach{margin-top:10px;background:transparent;border:2px dashed var(--line);color:var(--dim);border-radius:6px;padding:10px 12px;font-weight:600;font-size:13px}
+  .feel{display:flex;gap:8px;flex-wrap:wrap}
+  .feel button{flex:1;min-width:46%;padding:13px 6px;border:2px solid var(--line);background:transparent;color:var(--dim);border-radius:6px;font-size:14px;font-weight:600}
+  .feel button.on{border-color:var(--y);color:#fff;background:var(--card2)}
+  #dateInput{width:auto;padding:12px 14px}
+  .danger{width:100%;margin-top:26px;padding:14px;border:2px solid var(--red);background:transparent;color:var(--red);border-radius:6px;font-weight:700}
+
+  /* progress */
+  .ins{display:flex;gap:10px;padding:10px 0;border-top:1px solid #3a3a3a;font-size:14px;line-height:1.5;color:var(--dim)}
+  .ins:first-of-type{border-top:none}
+  .ins b{color:#fff}
+  .pg .name{font-weight:700;font-size:18px}
+  .pg .kind{font:700 10px 'Montserrat',sans-serif;color:var(--mute);letter-spacing:.05em;margin-top:2px}
+  .pg .row{display:flex;gap:20px;margin-top:12px;flex-wrap:wrap}
+  .pg .row div{font:800 19px 'Montserrat',sans-serif}
+  .pg .row small{display:block;font:600 10px 'Montserrat',sans-serif;color:var(--mute);margin-bottom:3px;letter-spacing:.04em}
+  .pg .up{color:var(--green)}.pg .down{color:var(--red)}
+  .chartcap{font-size:11px;color:var(--mute);margin-top:6px}
+  .hist{margin-top:14px;border-top:1px solid #3a3a3a;padding-top:6px}
+  .hist .h{padding:10px 0;border-bottom:1px solid #333;font-size:14px}
+  .hist .h b{display:block;margin-bottom:5px}
+  .tap{font-size:12px;color:var(--mute);margin-top:12px}
+
+  #toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(16px);opacity:0;background:#000;color:var(--y);
+    border:2px solid var(--y);padding:11px 18px;border-radius:6px;font-weight:700;font-size:14px;z-index:950;transition:.2s;pointer-events:none;text-align:center;max-width:86%}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .big{font-size:56px;margin-bottom:6px}
+  .chipbtn{border:2px solid var(--line);background:transparent;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:14px}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+  .camg{display:flex;gap:6px;flex-shrink:0}
+  .setrow{flex-wrap:wrap}
+  .cam{background:transparent;border:2px dashed var(--line);color:var(--dim);border-radius:6px;padding:7px 11px;font-weight:600;font-size:12px;white-space:nowrap}
+  .mlabel{font:700 11px 'Montserrat',sans-serif;color:var(--y);margin-top:10px}
+  .gal{display:flex;gap:10px;flex-wrap:wrap}
+  .gcap{font:600 11px 'Montserrat',sans-serif;color:var(--dim);margin-top:4px;line-height:1.4}
+  .merge{margin-top:16px;border-top:1px dashed var(--line);padding-top:12px}
+  .merge select{margin-top:8px;padding:12px}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .top h1{margin-top:0;font-size:22px;line-height:1.15}
+  .topr{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .sync{font:700 10px 'Montserrat',sans-serif;letter-spacing:.04em;padding:5px 8px;border-radius:3px;border:1px solid var(--line);color:var(--mute)}
+  .sync.ok{color:var(--green);border-color:var(--green)}.sync.off,.sync.auth{color:var(--red);border-color:var(--red)}
+  .gear{width:40px;height:40px;border-radius:6px;border:2px solid var(--line);background:transparent;color:var(--text);font-size:18px}
+  .thumb .ytb{position:absolute;left:4px;bottom:4px;background:#e62117;color:#fff;font:800 9px 'Montserrat',sans-serif;padding:2px 5px;border-radius:3px}
+  #lightbox iframe{width:100%;max-width:520px;aspect-ratio:16/9;border:0;border-radius:6px}
+  #lightbox a{color:var(--y);font-weight:700;display:block;margin-top:12px;text-align:center}
+  .sheet{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:950;display:none;align-items:flex-end;justify-content:center}
+  .sheetbox{background:var(--card);width:100%;max-width:520px;padding:20px 16px 28px;border-radius:14px 14px 0 0;border-top:3px solid var(--y)}
+  .sheetbox .btn{margin-top:10px}
+  #login{position:fixed;inset:0;background:var(--bg);z-index:990;display:none;align-items:center;justify-content:center;padding:24px}
+  #login .box{width:100%;max-width:360px}
+  .setbox{background:var(--card);border:2px solid var(--line);border-radius:6px;padding:16px;margin-top:14px}
+  .setbox p{color:var(--dim);font-size:14px;line-height:1.5;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top"><h1 class="head" id="pageTitle">Щоденник тренувань</h1><div class="topr"><span class="sync" id="sync"></span><button class="gear" onclick="openSettings()" aria-label="Налаштування">⚙</button></div></div>
+  <main>
+    <div class="tab on" id="tab-diary"></div>
+    <div class="tab" id="tab-progress"></div>
+  </main>
+</div>
+
+<nav class="nav">
+  <button class="on" data-t="diary"><b>▤</b><span>ЩОДЕННИК</span></button>
+  <button data-t="progress"><b>↗</b><span>ПРОГРЕС</span></button>
+</nav>
+
+<!-- ENTRY EDITOR -->
+<div class="ov" id="entryOv">
+  <div class="ovhead"><button onclick="closeEntry()">✕ Скасувати</button><span class="mid" id="entryMid">НОВИЙ ЗАПИС</span><button style="color:var(--y)" onclick="saveEntry()">Зберегти</button></div>
+  <div class="ovbody">
+    <div class="lbl" style="margin-top:0">ДАТА</div>
+    <input type="date" class="field" id="dateInput" oninput="ed.date=this.value">
+
+    <div class="lbl">ЩО ТИ ЗРОБИВ? ПИШИ ЯК У НОТАТКАХ</div>
+    <textarea class="field big" id="entryText" placeholder="підтягування +36кг 5 раз&#10;підтягування +24кг 8 раз&#10;front lever 12 сек&#10;віджимання 3х15" oninput="ed.text=this.value;renderPreview()"></textarea>
+    <div id="knownChips"></div>
+    <div class="helpbox">
+      <div style="margin-bottom:4px"><b style="color:#fff">Як писати</b> — кожен підхід з нового рядка:</div>
+      <code>підтягування +36кг 5 раз</code>
+      <code>front lever 12 сек</code>
+      <code>стійка на руках 30с</code>
+      <code>віджимання 3х15</code>
+      <code>присідання 60кг 8/8/6</code>
+      <div style="margin-top:6px">Хочеш — додай паузу: <span class="mono" style="color:var(--y)">відп 2хв</span>. Усе, що без цифр, піде у коментар.</div>
+      <button class="link" style="padding:6px 0 0" onclick="fillExample()">Показати приклад</button>
+    </div>
+
+    <div class="lbl">Я ЗРОЗУМІВ ТАК</div>
+    <div id="preview"></div>
+
+    <div class="lbl">САМОПОЧУТТЯ</div>
+    <div class="feel" id="feelBtns"></div>
+
+    <div class="lbl">КОМЕНТАР (щось боліло, як почувався...)</div>
+    <textarea class="field" id="commentInput" placeholder="Необов'язково" oninput="ed.comment=this.value"></textarea>
+
+    <div class="lbl">ВІДЕО / ФОТО ДО ЗАПИСУ</div>
+    <div style="display:flex;gap:8px"><button class="btn ghost" onclick="attachFile('__day')">📁 Файл</button><button class="btn ghost" onclick="attachYT('__day')">▶ YouTube</button></div>
+    <div class="media" id="dayMedia"></div>
+
+    <button class="btn" style="margin-top:26px" onclick="saveEntry()">💾 Зберегти</button>
+    <button class="danger" id="delBtn" style="display:none" onclick="deleteEntry()">Видалити цей запис</button>
+  </div>
+</div>
+
+<div class="ov" id="doneOv"><div id="doneBody" style="max-width:420px;width:100%"></div></div>
+
+<div id="login"><div class="box">
+  <div class="head" style="font-size:26px;margin-bottom:6px">Щоденник тренувань</div>
+  <p style="color:var(--dim);margin-bottom:18px;line-height:1.5">Введи код доступу. Він зберігається на цьому пристрої, питати знову не буде.</p>
+  <input class="field" id="codeInput" type="password" placeholder="Код доступу" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+  <div id="loginErr" style="color:var(--red);font-size:14px;margin-top:8px;min-height:18px"></div>
+  <button class="btn" style="margin-top:10px" onclick="doLogin()">Увійти</button>
+</div></div>
+
+<div class="sheet" id="mediaSheet" onclick="closeSheet()"><div class="sheetbox" onclick="event.stopPropagation()">
+  <div class="lbl" style="margin-top:0">ПОСИЛАННЯ НА YOUTUBE (доступ за посиланням)</div>
+  <input class="field" id="ytInput" placeholder="https://youtu.be/..." inputmode="url">
+  <button class="btn ghost" onclick="addYT()">▶ Додати посилання</button>
+</div></div>
+
+<div class="ov" id="setOv">
+  <div class="ovhead"><button onclick="$('setOv').style.display='none'">✕ Закрити</button><span class="mid">НАЛАШТУВАННЯ</span><span style="width:70px"></span></div>
+  <div class="ovbody">
+    <div class="setbox"><div class="lbl" style="margin-top:0">ІМПОРТ ІСТОРІЇ</div>
+      <p>Завантаж файл з історією (JSON), який я зробив з твоєї нотатки. Повторний імпорт нічого не дублює.</p>
+      <button class="btn ghost" onclick="$('importInput').click()">📥 Вибрати файл історії</button></div>
+    <div class="setbox"><div class="lbl" style="margin-top:0">РЕЗЕРВНА КОПІЯ</div>
+      <p>Зберегти всі записи в один файл (без самих відео, лише посилання на них).</p>
+      <button class="btn ghost" onclick="exportJSON()">💾 Скачати копію</button></div>
+    <div class="setbox"><div class="lbl" style="margin-top:0">СИНХРОНІЗАЦІЯ</div>
+      <p id="syncInfo"></p>
+      <button class="btn ghost" onclick="sync(true)">🔄 Синхронізувати зараз</button>
+      <button class="danger" onclick="logout()">Вийти з цього пристрою</button></div>
+  </div>
+</div>
+<input type="file" id="importInput" accept=".json,application/json" style="display:none">
+<div id="lightbox" onclick="closeLightbox()"></div>
+<div id="toast"></div>
+<input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none">
+
+<script>
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const todayISO = () => new Date().toLocaleDateString('sv-SE');
+const fmtDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('uk-UA', {day:'numeric', month:'long'});
+const fmtDateLong = iso => new Date(iso + 'T00:00:00').toLocaleDateString('uk-UA', {weekday:'long', day:'numeric', month:'long'});
+const fmtTime = s => Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+const round1 = x => Math.round(x*10)/10;
+const num = x => parseFloat(String(x).replace(',', '.'));
+const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+const normKey = n => (n || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+function load(k, d){ try{ return JSON.parse(localStorage.getItem(k)) || d; }catch(e){ return d; } }
+let toastT;
+function toast(msg, ms=2400){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms);
+}
+/* ================= storage + sync (server is the source of truth, phone keeps a cache) ================= */
+const API_BASE = 'https://training-log-data.lionbeer-ua.workers.dev';
+const lsGet = (k, d) => { try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } };
+const lsSet = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+let CODE = lsGet('tl4_code', '');
+let entries = load('tl4_entries', []);
+let aliases = load('tl4_aliases', {});   // "як я колись написав" -> "правильна назва вправи"
+let deleted = load('tl4_deleted', []);
+let rev = +lsGet('tl4_rev', 0), dirty = lsGet('tl4_dirty', '') === '1';
+const hashE = e => { const {updated, ...r} = e; const s = JSON.stringify(r); let h = 5381; for(let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return h; };
+let snap = new Map(entries.map(e => [e.id, hashE(e)]));
+function saveLocal(){
+  lsSet('tl4_entries', JSON.stringify(entries)); lsSet('tl4_aliases', JSON.stringify(aliases));
+  lsSet('tl4_deleted', JSON.stringify(deleted)); lsSet('tl4_rev', String(rev)); lsSet('tl4_dirty', dirty ? '1' : '0');
+}
+function persist(){
+  const now = Date.now(), ids = new Set();
+  entries.forEach(e => { ids.add(e.id); const h = hashE(e); if(snap.get(e.id) !== h){ e.updated = now; snap.set(e.id, h); } });
+  [...snap.keys()].forEach(id => { if(!ids.has(id)){ snap.delete(id); if(!deleted.includes(id)) deleted.push(id); } });
+  dirty = true; saveLocal(); schedulePush();
+}
+function setSync(s){
+  const el = $('sync'); if(!el) return;
+  const m = {ok:['✓ ЗБЕРЕЖЕНО','ok'], wait:['⟳ …',''], off:['⚠ ОФЛАЙН','off'], auth:['⚠ КОД','auth']}[s] || ['',''];
+  el.textContent = m[0]; el.className = 'sync ' + m[1];
+  const i = $('syncInfo'); if(i) i.textContent = s === 'ok' ? 'Усе збережено на сервері, на всіх пристроях однакові дані.' : s === 'off' ? 'Немає зв\'язку із сервером. Записи збережені на телефоні й відправляться, коли з\'явиться інтернет.' : s === 'auth' ? 'Сервер не прийняв код доступу.' : 'Синхронізація…';
+}
+let pushT, syncing = false;
+function schedulePush(){ setSync('wait'); clearTimeout(pushT); pushT = setTimeout(() => sync(), 500); }
+async function api(path, opts = {}){
+  const r = await fetch(API_BASE + path, {...opts, headers: {'X-Access-Code': CODE, ...(opts.headers || {})}});
+  if(r.status === 401){ showLogin('Невірний код'); throw new Error('auth'); }
+  return r;
+}
+function mergeState(s){
+  const del = new Set([...deleted, ...(s.deleted || [])]), m = new Map();
+  [...(s.entries || []), ...entries].forEach(e => { if(del.has(e.id)) return; const o = m.get(e.id); if(!o || (e.updated || 0) > (o.updated || 0)) m.set(e.id, e); });
+  entries = [...m.values()]; aliases = {...(s.aliases || {}), ...aliases}; deleted = [...del];
+  snap = new Map(entries.map(e => [e.id, hashE(e)]));
+}
+async function sync(manual){
+  if(!CODE) return;
+  if(syncing){ return; } syncing = true; setSync('wait');
+  try{
+    for(let t = 0; t < 3; t++){
+      if(!dirty){
+        const s = await (await api('/api/state')).json();
+        if(s.rev !== rev){ mergeState(s); rev = s.rev; }
+        break;
+      }
+      const r = await api('/api/state', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({baseRev: rev, entries, aliases, deleted})});
+      const s = await r.json();
+      if(r.status === 409){ mergeState(s.state); rev = s.state.rev; continue; }
+      if(!r.ok) throw new Error('server');
+      rev = s.rev; dirty = false; break;
+    }
+    setSync('ok'); if(manual) toast('Синхронізовано ✓');
+  }catch(e){ setSync(e.message === 'auth' ? 'auth' : 'off'); if(manual && e.message !== 'auth') toast('Немає зв\'язку із сервером'); }
+  syncing = false; saveLocal(); renderDiary(); renderProgress();
+}
+function showLogin(msg){ $('login').style.display = 'flex'; $('loginErr').textContent = msg || ''; setTimeout(() => $('codeInput').focus(), 50); }
+async function doLogin(){
+  const v = $('codeInput').value.trim(); if(!v) return;
+  CODE = v; $('loginErr').textContent = 'Перевіряю…';
+  try{
+    const r = await fetch(API_BASE + '/api/state', {headers: {'X-Access-Code': CODE}});
+    if(r.status === 401){ $('loginErr').textContent = 'Невірний код'; return; }
+    if(!r.ok) throw 0;
+    lsSet('tl4_code', CODE); $('login').style.display = 'none'; $('codeInput').value = '';
+    sync();
+  }catch(e){ $('loginErr').textContent = 'Немає зв\'язку із сервером. Перевір інтернет.'; }
+}
+function logout(){
+  if(!confirm('Вийти? Дані на сервері лишаться, але на цьому пристрої доведеться ввести код знову.')) return;
+  ['tl4_code','tl4_entries','tl4_aliases','tl4_deleted','tl4_rev','tl4_dirty'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+  location.reload();
+}
+function openSettings(){ $('setOv').style.display = 'block'; setSync(dirty ? 'wait' : 'ok'); }
+function exportJSON(){
+  const b = new Blob([JSON.stringify({entries, aliases}, null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'shchodennyk-' + todayISO() + '.json'; a.click();
+}
+$('importInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  try{
+    const j = JSON.parse(await f.text()), have = new Set(entries.map(x => x.id));
+    const add = (j.entries || []).filter(x => x && x.id && x.date && !have.has(x.id));
+    entries = entries.concat(add); aliases = {...(j.aliases || {}), ...aliases};
+    persist(); renderDiary(); renderProgress(); $('setOv').style.display = 'none';
+    toast('Імпортовано записів: ' + add.length, 3500);
+  }catch(err){ toast('Не вдалось прочитати файл'); }
+});
+window.addEventListener('online', () => sync());
+document.addEventListener('visibilitychange', () => { if(!document.hidden && CODE) sync(); });
+
+/* ================= PARSER: text like in notes -> sets ================= */
+const NUM  = String.raw`(\d+(?:[.,]\d+)?)`;
+const END  = String.raw`(?![\p{L}\d])`;
+const SECU = String.raw`(?:сек\p{L}*|с|sec|s)`;
+const MINU = String.raw`(?:хв|хвилин\p{L}*|мин\p{L}*|min)`;
+const REPU = String.raw`(?:раз\p{L}*|повт\p{L}*|р|reps?)`;
+const RX = {
+  rest:  new RegExp(String.raw`(?:відпочинок|відп|пауза|rest)\.?\s*:?\s*${NUM}\s*(${MINU}|${SECU})?${END}`, 'iu'),
+  wKg:   new RegExp(String.raw`(?<![\p{L}\d])([+\-−–]?)${NUM}\s*(?:кг|kg|кілограм\p{L}*)${END}`, 'iu'),
+  wPlus: new RegExp(String.raw`(?<![\p{L}\d])\+${NUM}${END}(?![.,]\d)`, 'iu'),
+  nxm:   new RegExp(String.raw`(?<![\p{L}\d])(\d+)\s*(?:[xх×*]|по)\s*${NUM}\s*(${SECU}|${REPU})?${END}`, 'iu'),
+  list:  new RegExp(String.raw`(?<![\p{L}\d])(\d+(?:[.,]\d+)?(?:\s*/\s*\d+(?:[.,]\d+)?)+)\s*(${SECU}|${REPU})?${END}`, 'iu'),
+  clock: /(?<![\d:])(\d{1,2}):(\d{2})(?![\d:])/,
+  min:   new RegExp(String.raw`(?<![\p{L}\d])${NUM}\s*${MINU}${END}`, 'iu'),
+  sec:   new RegExp(String.raw`(?<![\p{L}\d])${NUM}\s*${SECU}${END}`, 'iu'),
+  rep:   new RegExp(String.raw`(?<![\p{L}\d])${NUM}\s*${REPU}${END}`, 'iu'),
+  bare:  new RegExp(String.raw`(?<![\p{L}\d.,:])${NUM}${END}(?![:])`, 'iu'),
+};
+const SECS_NAME = /(lever|planche|планш|стійк|handstand|hang|hold|l-?sit|утрим|планк|plank|міст|bridge|flag|прапор|маятник|(^|\s)вис(\s|$))/i;
+const unitMode = u => !u ? null : (/^(сек\p{L}*|с|sec|s)$/iu.test(u) ? 'secs' : 'reps');
+
+function parsePart(src){
+  let t = src, m, rest = 0, w = null, sets = [];
+  const hadDigits = /\d/.test(src);
+  if((m = t.match(RX.rest))){
+    const v = num(m[1]), u = (m[2] || '').toLowerCase();
+    rest = /^(хв|хвилин|мин|min)/.test(u) ? v*60 : u ? v : (v <= 10 ? v*60 : v);
+    t = t.replace(m[0], ' ');
+  }
+  if((m = t.match(RX.wKg))){ w = (/[-−–]/.test(m[1]) ? -1 : 1) * num(m[2]); t = t.replace(m[0], ' '); }
+  else if((m = t.match(RX.wPlus))){ w = num(m[1]); t = t.replace(m[0], ' '); }
+  const mk = (v, mode) => ({v: round1(v), mode});
+  let done = false;
+  m = t.match(RX.nxm);
+  if(m && +m[1] <= 15){
+    const md = unitMode(m[3]) || 'auto';
+    for(let i = 0; i < +m[1]; i++) sets.push(mk(num(m[2]), md));
+    t = t.replace(m[0], ' '); done = true;
+  }
+  if(!done && (m = t.match(RX.list))){
+    const md = unitMode(m[2]) || 'auto';
+    m[1].split('/').forEach(x => sets.push(mk(num(x), md)));
+    t = t.replace(m[0], ' '); done = true;
+  }
+  if(!done && (m = t.match(RX.clock))){ sets.push(mk(+m[1]*60 + +m[2], 'secs')); t = t.replace(m[0], ' '); done = true; }
+  if(!done && (m = t.match(RX.min))){ sets.push(mk(num(m[1])*60, 'secs')); t = t.replace(m[0], ' '); done = true; }
+  if(!done && (m = t.match(RX.sec))){ sets.push(mk(num(m[1]), 'secs')); t = t.replace(m[0], ' '); done = true; }
+  if(!done && (m = t.match(RX.rep))){ sets.push(mk(num(m[1]), 'reps')); t = t.replace(m[0], ' '); done = true; }
+  if(!done && (m = t.match(RX.bare))){ sets.push(mk(num(m[1]), 'auto')); t = t.replace(m[0], ' '); done = true; }
+  const name = t.replace(/\s+/g, ' ').trim().replace(/^[\s:;,.\-–—()]+|[\s:;,.\-–—()]+$/g, '').trim();
+  return {name, w, rest, sets, hadDigits, leftoverDigits: /\d/.test(name) || /підход|підх\./i.test(name)};
+}
+
+function modeFromHistory(key){
+  for(const e of [...entries].sort((a,b) => b.date.localeCompare(a.date) || b.created - a.created)){
+    const ex = e.exercises.find(x => x.key === key);
+    if(ex && ex.sets.length) return ex.sets[0].mode;
+  }
+  return null;
+}
+
+function parseText(text){
+  const map = new Map(), unparsed = [], headers = [];
+  let curName = '', curHeader = null;
+  String(text || '').split(/\n/).forEach(raw => {
+    let line = raw.trim().replace(/^[-•*·–—]\s+/, '').replace(/^\d+[.)]\s+(?=\D)/, '');
+    if(!line) return;
+    const parts = line.split(/\s*;\s*|,\s+/);
+    let lineName = '', lastSet = null;
+    parts.forEach((part, pi) => {
+      if(!part.trim()) return;
+      const r = parsePart(part);
+      if(r.sets.length === 0){
+        if(r.w !== null){ unparsed.push(part.trim()); return; }
+        if(!r.hadDigits && r.name){
+          if(pi === 0){ curName = r.name; curHeader = {text: r.name, used: false}; headers.push(curHeader); }
+          else { headers.push({text: r.name, used: false}); }
+        } else if(r.hadDigits){ unparsed.push(part.trim()); }
+        return;
+      }
+      if(r.leftoverDigits){ unparsed.push(part.trim()); return; }
+      let name = r.name;
+      if(!name){
+        name = lineName || curName;
+        if(!lineName && curHeader) curHeader.used = true;
+      } else { curHeader = null; }
+      if(!name){ unparsed.push(part.trim()); return; }
+      lineName = name; curName = name;
+      let w = r.w;
+      if(w === null && !r.name && lastSet) w = lastSet.w;
+      const typedKey = normKey(name);
+      let key = typedKey, shown = cap(name);
+      if(aliases[typedKey]){ shown = aliases[typedKey]; key = normKey(shown); }
+      if(!map.has(key)) map.set(key, {name: shown, key, typedKey: aliases[typedKey] ? null : typedKey, sets: []});
+      r.sets.forEach(s => {
+        let md = s.mode;
+        if(md === 'auto' && !r.name && lastSet && lastSet.mode !== 'auto') md = lastSet.mode;
+        const set = {w: w ?? 0, v: s.v, mode: md, rest: r.rest || 0};
+        map.get(key).sets.push(set); lastSet = set;
+      });
+    });
+  });
+  const exercises = [...map.values()];
+  exercises.forEach(ex => {
+    const explicit = ex.sets.filter(s => s.mode !== 'auto');
+    let chosen;
+    if(explicit.length){
+      const secs = explicit.filter(s => s.mode === 'secs').length;
+      chosen = secs > explicit.length/2 ? 'secs' : 'reps';
+    } else chosen = SECS_NAME.test(ex.name) ? 'secs' : (modeFromHistory(ex.key) || 'reps');
+    ex.sets.forEach(s => { if(s.mode === 'auto') s.mode = chosen; });
+  });
+  return {exercises, unparsed, notes: headers.filter(h => !h.used).map(h => h.text)};
+}
+
+/* ================= stats ================= */
+const e1rm = (w, r) => w * (1 + r/30);
+function sessionStats(ex){
+  const sets = ex.sets || [];
+  const secsN = sets.filter(s => s.mode === 'secs').length;
+  let kind = secsN > sets.length/2 ? 'secs' : (sets.some(s => s.w > 0 && s.mode === 'reps') ? 'weight' : 'reps');
+  let best = null, metric = 0, volume = 0;
+  sets.forEach(s => {
+    let m;
+    if(kind === 'weight'){ m = s.mode === 'reps' && s.w > 0 ? e1rm(s.w, s.v) : 0; volume += s.mode === 'reps' ? Math.max(s.w, 0) * s.v : 0; }
+    else { m = s.mode === (kind === 'secs' ? 'secs' : 'reps') ? s.v : 0; volume += s.v; }
+    if(m > 0 && (!best || m > metric || (m === metric && s.w > best.w))){ best = s; metric = m; }
+  });
+  if(!best) return null;
+  return {kind, metric: round1(metric), label: setLabel(best), volume: Math.round(volume), best};
+}
+function setLabel(s){
+  const wt = s.w > 0 ? `+${s.w} кг × ` : (s.w < 0 ? `${s.w} кг × ` : '');
+  if(s.mode === 'secs') return `${wt}${s.v} сек`;
+  return s.w ? `${wt}${s.v}` : `${s.v} повт`;
+}
+function chipHTML(s){
+  return `<span class="chip">${esc(setLabel(s))}${s.rest ? ` <small>· пауза ${fmtTime(Math.round(s.rest))}</small>` : ''}</span>`;
+}
+// відео/фото конкретних підходів (ключ "вправа#номер підходу") + старі, прикріплені до всієї вправи
+function setMediaHTML(e, x){
+  let h = '';
+  x.sets.forEach((s, i) => {
+    const mm = (e.media && e.media[x.key + '#' + i]) || [];
+    if(mm.length) h += `<div class="mlabel">${esc(setLabel(s))}</div><div class="media">${mm.map(m => thumb(m)).join('')}</div>`;
+  });
+  const whole = (e.media && e.media[x.key]) || [];
+  if(whole.length) h += `<div class="media">${whole.map(m => thumb(m)).join('')}</div>`;
+  return h;
+}
+function calcPRs(exs, before){
+  const prs = [];
+  exs.forEach(ex => {
+    const st = sessionStats(ex); if(!st) return;
+    let prev = null;
+    before.forEach(e => e.exercises.forEach(x => {
+      if(x.key !== ex.key) return;
+      const s2 = sessionStats(x);
+      if(s2 && s2.kind === st.kind && (prev === null || s2.metric > prev)) prev = s2.metric;
+    }));
+    if(prev !== null && st.metric > prev + 1e-9) prs.push({name: ex.name, label: st.label});
+  });
+  return prs;
+}
+const sortedAsc = () => [...entries].sort((a,b) => a.date.localeCompare(b.date) || a.created - b.created);
+const sortedDesc = () => sortedAsc().reverse();
+const daysAgo = iso => Math.round((new Date(todayISO() + 'T00:00:00') - new Date(iso + 'T00:00:00')) / 864e5);
+
+/* ================= exercise names: known list, typos, merging ================= */
+function knownMap(){
+  const m = new Map();
+  sortedAsc().forEach(e => e.exercises.forEach(x => {
+    const o = m.get(x.key) || {key:x.key, name:x.name, count:0, last:''};
+    o.count++; o.last = e.date; m.set(x.key, o);
+  }));
+  return m;
+}
+function lev(a, b){
+  const m = a.length, n = b.length; if(!m) return n; if(!n) return m;
+  let prev = Array.from({length: n + 1}, (_, i) => i);
+  for(let i = 1; i <= m; i++){
+    const cur = [i];
+    for(let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+// "підтягуваня" ~ "підтягування" (опечатка) і "підтяг" ~ "підтягування" (скорочення).
+// А "підтягування з однією рукою" — це інша вправа, тому для довших назв з доданими словами підказки нема.
+function similarKeys(a, b){
+  if(a === b) return true;
+  const sa = a.split(' ').length === 1, sb = b.split(' ').length === 1;
+  const [s, l] = a.length <= b.length ? [a, b] : [b, a];
+  if(sa && sb && s.length >= 4 && l.startsWith(s)) return true;
+  const d = lev(a, b), lim = Math.max(1, Math.floor(Math.max(a.length, b.length) * 0.2));
+  return d <= lim && Math.min(a.length, b.length) >= 4;
+}
+const dismissed = new Set();
+function suggestHTML(x){
+  if(!x.typedKey || dismissed.has(x.typedKey)) return '';
+  const known = knownMap(); if(known.has(x.key)) return '';
+  let best = null;
+  known.forEach(o => { if(similarKeys(x.key, o.key) && (!best || o.count > best.count)) best = o; });
+  if(!best) return '';
+  return `<div class="warn" style="margin:8px 0 0">Схоже на твою вправу <b>«${esc(best.name)}»</b>. Це те саме?<br>
+    <button class="btn small" style="display:inline-block;width:auto;padding:9px 14px;margin:8px 8px 0 0" onclick="acceptAlias('${esc(x.typedKey)}','${esc(best.key)}')">Так, це воно</button>
+    <button class="btn ghost small" style="display:inline-block;width:auto;padding:9px 14px;margin-top:8px" onclick="dismissAlias('${esc(x.typedKey)}')">Ні, нова вправа</button></div>`;
+}
+function acceptAlias(typedKey, targetKey){ mergeInto(typedKey, targetKey); if(ed) renderPreview(); toast('Об\'єднано ✓'); }
+function dismissAlias(typedKey){ dismissed.add(typedKey); renderPreview(); }
+function mergeInto(srcKey, targetKey){
+  if(srcKey === targetKey) return;
+  const tgtName = (knownMap().get(targetKey) || {}).name;
+  if(!tgtName) return;
+  aliases[srcKey] = tgtName;
+  Object.keys(aliases).forEach(k => { if(normKey(aliases[k]) === srcKey) aliases[k] = tgtName; });
+  entries.forEach(e => {
+    const s = e.exercises.find(x => x.key === srcKey); if(!s) return;
+    const t = e.exercises.find(x => x.key === targetKey);
+    const offset = t ? t.sets.length : 0;
+    if(t){ t.sets.push(...s.sets); e.exercises = e.exercises.filter(x => x !== s); }
+    else { s.name = tgtName; s.key = targetKey; }
+    if(e.media){
+      Object.keys(e.media).forEach(mk => {
+        let nk = null;
+        if(mk === srcKey) nk = targetKey;
+        else if(mk.startsWith(srcKey + '#')) nk = targetKey + '#' + (offset + +mk.slice(srcKey.length + 1));
+        if(nk){ e.media[nk] = (e.media[nk] || []).concat(e.media[mk]); delete e.media[mk]; }
+      });
+    }
+  });
+  persist();
+}
+function doMerge(srcKey){
+  const sel = $('mg_' + srcKey.replace(/\s/g, '_')); if(!sel || !sel.value) return;
+  const known = knownMap(), src = known.get(srcKey), tgt = known.get(sel.value); if(!src || !tgt) return;
+  if(!confirm(`Об'єднати «${src.name}» з «${tgt.name}»?\nУсі записи стануть однією вправою «${tgt.name}».`)) return;
+  mergeInto(srcKey, sel.value); openKey = null; renderDiary(); renderProgress(); toast('Об\'єднано ✓');
+}
+function renderKnown(){
+  const list = [...knownMap().values()].sort((a, b) => b.count - a.count || b.last.localeCompare(a.last)).slice(0, 12);
+  $('knownChips').innerHTML = list.length
+    ? `<div class="lbl" style="margin-top:14px">ТВОЇ ВПРАВИ — НАТИСНИ, ЩОБ ДОДАТИ</div><div class="chips">${list.map(o => `<button class="chip chipbtn" onclick="insertName('${esc(o.key)}')">${esc(o.name)}</button>`).join('')}</div>`
+    : '';
+}
+function insertName(key){
+  const o = knownMap().get(key); if(!o) return;
+  const ta = $('entryText'); let v = ta.value;
+  if(v && !v.endsWith('\n')) v += '\n';
+  v += o.name + ' '; ta.value = v; ed.text = v; ta.focus(); ta.setSelectionRange(v.length, v.length); renderPreview();
+}
+
+/* ================= media (files in R2 via Worker, or a YouTube link) ================= */
+const mediaReg = {};
+const ytId = u => { const m = String(u).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/); return m ? m[1] : null; };
+async function shrinkImage(file){
+  try{
+    const bmp = await createImageBitmap(file, {imageOrientation: 'from-image'});
+    const k = Math.min(1, 1920 / Math.max(bmp.width, bmp.height));
+    if(k === 1 && file.size < 1.5e6) return file;
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(b => r(b || file), 'image/jpeg', 0.85));
+  }catch(e){ return file; }
+}
+async function uploadFile(file){
+  let blob = file, type = file.type || 'application/octet-stream';
+  if(type.startsWith('image/') && type !== 'image/gif'){ blob = await shrinkImage(file); type = blob.type || type; }
+  if(blob.size > 95 * 1024 * 1024) throw new Error('big');
+  const r = await api('/api/media', {method:'POST', headers:{'Content-Type': type, 'X-File-Name': encodeURIComponent(file.name || 'file')}, body: blob});
+  const j = await r.json(); if(!j.url) throw new Error('upload');
+  return {id: uid(), kind: 'file', type, url: j.url};
+}
+function thumb(m, rm){
+  mediaReg[m.id] = m;
+  const isVid = (m.type || '').startsWith('video');
+  const inner = m.kind === 'yt' ? `<img src="https://i.ytimg.com/vi/${esc(m.ytId)}/hqdefault.jpg" loading="lazy"><div class="play">▶</div><div class="ytb">YouTube</div>`
+    : isVid ? `<video src="${esc(m.url)}#t=0.1" muted playsinline preload="metadata"></video><div class="play">▶</div>`
+    : `<img src="${esc(m.url)}" loading="lazy">`;
+  return `<div class="thumb" onclick="event.stopPropagation();openLightbox('${m.id}')">${inner}${rm ? `<button class="x" onclick="event.stopPropagation();removeMedia('${rm.key}',${rm.i})">✕</button>` : ''}</div>`;
+}
+function openLightbox(id){
+  const m = mediaReg[id]; if(!m) return;
+  const lb = $('lightbox');
+  if(m.kind === 'yt') lb.innerHTML = `<div style="width:100%;max-width:520px" onclick="event.stopPropagation()"><iframe src="https://www.youtube-nocookie.com/embed/${esc(m.ytId)}?autoplay=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe><a href="https://youtu.be/${esc(m.ytId)}" target="_blank" rel="noopener">Відкрити в YouTube ↗</a></div>`;
+  else if((m.type || '').startsWith('video')) lb.innerHTML = `<video src="${esc(m.url)}" controls autoplay playsinline onclick="event.stopPropagation()"></video>`;
+  else lb.innerHTML = `<img src="${esc(m.url)}">`;
+  lb.style.display = 'flex';
+}
+function closeLightbox(){ $('lightbox').style.display = 'none'; $('lightbox').innerHTML = ''; }
+
+/* ================= tabs ================= */
+const TITLES = {diary:'Щоденник тренувань', progress:'Прогрес'};
+document.querySelectorAll('.nav button').forEach(b => b.onclick = () => {
+  const t = b.dataset.t;
+  document.querySelectorAll('.nav button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  $('tab-' + t).classList.add('on'); $('pageTitle').textContent = TITLES[t];
+  window.scrollTo(0, 0);
+  if(t === 'diary') renderDiary(); else renderProgress();
+});
+
+/* ================= DIARY ================= */
+const FEEL = {great:'🔥 Супер', ok:'🙂 Нормально', tired:'😴 Втома', pain:'🤕 Щось болить'};
+function renderDiary(){
+  const list = sortedDesc();
+  const in30 = list.filter(e => daysAgo(e.date) <= 30);
+  const prs30 = in30.reduce((a, e) => a + (e.prs ? e.prs.length : 0), 0);
+  let h = `<button class="btn" onclick="openEntry()">+ Записати тренування</button>`;
+  if(list.length) h += `<div class="stats"><div class="stat"><b>${in30.length}</b><span>тренувань за 30 днів</span></div><div class="stat"><b>${prs30}</b><span>рекордів за 30 днів</span></div></div>`;
+  h += `<div class="lbl">МОЇ ЗАПИСИ</div>`;
+  if(!list.length) h += `<div class="empty">Тут буде твій щоденник.<br>Натисни «Записати тренування» і напиши як у нотатках: <span class="mono" style="color:var(--y)">підтягування +36кг 5 раз</span></div>`;
+  list.forEach(e => {
+    h += `<div class="card" onclick="openEntry('${e.id}')">
+      ${e.feel ? `<span class="feelbadge">${FEEL[e.feel] || ''}</span>` : ''}
+      <div class="t">${esc(cap(fmtDateLong(e.date)))}${e.sample ? '<span class="sample">ПРИКЛАД</span>' : ''}</div>`;
+    e.exercises.forEach(x => {
+      h += `<div class="exname">${esc(x.name)}</div><div class="chips">${x.sets.map(chipHTML).join('')}</div>`;
+      h += setMediaHTML(e, x);
+    });
+    if(e.media && e.media.__day && e.media.__day.length) h += `<div class="media">${e.media.__day.map(m => thumb(m)).join('')}</div>`;
+    if(e.comment) h += `<div class="comment">${esc(e.comment)}</div>`;
+    if(e.prs && e.prs.length) h += `<span class="pr">🔥 НОВИЙ РЕКОРД</span>`;
+    h += `</div>`;
+  });
+  if(entries.some(e => e.sample)) h += `<button class="link" onclick="clearSamples()">Видалити приклади</button>`;
+  $('tab-diary').innerHTML = h;
+}
+function clearSamples(){
+  if(!confirm('Видалити приклади записів?')) return;
+  entries = entries.filter(e => !e.sample); persist(); renderDiary(); renderProgress();
+}
+
+/* ================= ENTRY EDITOR ================= */
+let ed = null;
+function openEntry(id){
+  const e = id ? entries.find(x => x.id === id) : null;
+  ed = e ? {id:e.id, date:e.date, text:e.text || '', feel:e.feel || '', comment:e.comment || '', media:JSON.parse(JSON.stringify(e.media || {}))}
+         : {id:null, date:todayISO(), text:'', feel:'', comment:'', media:{}};
+  $('entryMid').textContent = e ? 'РЕДАГУВАННЯ' : 'НОВИЙ ЗАПИС';
+  $('dateInput').value = ed.date; $('entryText').value = ed.text; $('commentInput').value = ed.comment;
+  $('delBtn').style.display = e ? 'block' : 'none';
+  renderKnown(); renderFeel(); renderPreview(); renderDayMedia();
+  $('entryOv').style.display = 'block'; $('entryOv').scrollTop = 0;
+}
+function closeEntry(){
+  if(ed && (ed.text.trim() || ed.comment.trim()) && !ed.id && !confirm('Закрити без збереження?')) return;
+  $('entryOv').style.display = 'none'; ed = null;
+}
+function renderFeel(){
+  $('feelBtns').innerHTML = Object.entries(FEEL).map(([k, v]) => `<button class="${ed.feel === k ? 'on' : ''}" onclick="setFeel('${k}')">${v}</button>`).join('');
+}
+function setFeel(k){ ed.feel = ed.feel === k ? '' : k; renderFeel(); }
+function fillExample(){
+  ed.text = 'підтягування +36кг 5 раз\nпідтягування +24кг 8 раз\nпідтягування +16кг 3 раз\nfront lever 12 сек, 10 сек, 8 сек\nстійка на руках 30с\nвіджимання 3х15\nплече трохи тягнуло';
+  $('entryText').value = ed.text; renderPreview();
+}
+function renderPreview(){
+  const p = parseText(ed.text);
+  let h = '';
+  if(!ed.text.trim()) h = `<div class="note">Почни писати вище — тут одразу з'явиться, як я це розібрав.</div>`;
+  p.exercises.forEach(x => {
+    const st = sessionStats(x);
+    const mm = ed.media[x.key] || [];
+    h += `<div class="pv"><div><span class="n">${esc(x.name)}</span><span class="k">${x.sets.length} ${x.sets.length === 1 ? 'підхід' : (x.sets.length < 5 ? 'підходи' : 'підходів')}</span></div>
+      ${suggestHTML(x)}
+      ${x.sets.map((s, i) => {
+        const k = x.key + '#' + i, sm = ed.media[k] || [];
+        return `<div class="setrow">${chipHTML(s)}<span class="camg"><button class="cam" onclick="attachFile('${esc(k)}')">📁 Файл</button><button class="cam" onclick="attachYT('${esc(k)}')">▶ YouTube</button></span></div>`
+          + (sm.length ? `<div class="media">${sm.map((m, j) => thumb(m, {key:k, i:j})).join('')}</div>` : '');
+      }).join('')}
+      ${mm.length ? `<div class="media">${mm.map((m, i) => thumb(m, {key:x.key, i})).join('')}</div>` : ''}</div>`;
+  });
+  if(p.unparsed.length) h += `<div class="warn"><b>Не зрозумів:</b><br>${p.unparsed.map(u => '«' + esc(u) + '»').join('<br>')}<br><span style="font-size:13px">Напиши так: <span class="mono">назва вага кількість</span>, наприклад <span class="mono">підтягування +20кг 6 раз</span></span></div>`;
+  if(p.notes.length) h += `<div class="note">💬 Піде в коментар: ${p.notes.map(esc).join(' · ')}</div>`;
+  $('preview').innerHTML = h;
+}
+function renderDayMedia(){
+  const mm = ed.media.__day || [];
+  $('dayMedia').innerHTML = mm.map((m, i) => thumb(m, {key:'__day', i})).join('');
+}
+let mediaTarget = null;
+function attachFile(key){ mediaTarget = key; $('fileInput').click(); }
+function attachYT(key){ mediaTarget = key; $('ytInput').value = ''; $('mediaSheet').style.display = 'flex'; setTimeout(() => $('ytInput').focus(), 50); }
+function closeSheet(){ $('mediaSheet').style.display = 'none'; }
+function addYT(){
+  const id = ytId($('ytInput').value);
+  if(!id){ toast('Це не схоже на посилання YouTube'); return; }
+  (ed.media[mediaTarget] = ed.media[mediaTarget] || []).push({id: uid(), kind: 'yt', ytId: id, url: $('ytInput').value.trim()});
+  closeSheet(); renderPreview(); renderDayMedia(); toast('Додано ✓');
+}
+$('fileInput').addEventListener('change', async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  if(!ed || !mediaTarget || !files.length) return;
+  const target = mediaTarget; let ok = 0;
+  for(let i = 0; i < files.length; i++){
+    toast(`Завантажую ${i + 1} з ${files.length}… не закривай сторінку`, 120000);
+    try{
+      const m = await uploadFile(files[i]);
+      (ed.media[target] = ed.media[target] || []).push(m); ok++; renderPreview(); renderDayMedia();
+    }catch(err){
+      if(err.message === 'auth') return;
+      toast(err.message === 'big' ? 'Файл більший за 95 МБ. Залий його на YouTube (доступ за посиланням) і встав посилання.' : 'Не вдалось завантажити. Перевір інтернет.', 5000);
+      return;
+    }
+  }
+  toast('Додано ✓ (' + ok + ')');
+});
+function removeMedia(key, i){ ed.media[key].splice(i, 1); renderPreview(); renderDayMedia(); }
+function saveEntry(){
+  const p = parseText(ed.text);
+  if(!p.exercises.length){ toast('Впиши хоча б один підхід, напр.: підтягування 10 раз'); return; }
+  if(p.unparsed.length && !confirm('Деякі рядки я не зрозумів (вони не збережуться як підходи). Зберегти все одно?')) return;
+  const valid = new Set(['__day']);
+  p.exercises.forEach(x => { valid.add(x.key); x.sets.forEach((_, i) => valid.add(x.key + '#' + i)); });
+  const media = {};
+  Object.entries(ed.media).forEach(([k, v]) => { if(valid.has(k) && v.length) media[k] = v; });
+  const comment = [ed.comment.trim(), p.notes.join('. ')].filter(Boolean).join('\n');
+  const others = entries.filter(x => x.id !== ed.id);
+  const before = others.filter(x => x.date < ed.date || (x.date === ed.date && x.created < (ed.id ? (entries.find(y => y.id === ed.id) || {}).created || Infinity : Infinity)));
+  const prs = calcPRs(p.exercises, before);
+  const entry = {id: ed.id || uid(), date: ed.date || todayISO(), created: ed.id ? (entries.find(y => y.id === ed.id) || {}).created || Date.now() : Date.now(),
+    text: ed.text, feel: ed.feel, comment, media, exercises: p.exercises.map(({typedKey, ...rest}) => rest), prs: prs.map(x => x.name)};
+  const idx = entries.findIndex(x => x.id === entry.id);
+  if(idx >= 0) entries[idx] = entry; else entries.push(entry);
+  persist();
+  $('entryOv').style.display = 'none'; ed = null;
+  renderDiary(); renderProgress();
+  if(prs.length){
+    $('doneBody').innerHTML = `<div class="big">🔥</div><div class="head" style="font-size:26px;margin-bottom:12px">Новий рекорд!</div>
+      ${prs.map(x => `<div class="card" style="text-align:left"><div class="t">${esc(x.name)}</div><div class="s mono" style="color:var(--y)">${esc(x.label)}</div></div>`).join('')}
+      <button class="btn" style="margin-top:16px" onclick="$('doneOv').style.display='none'">Круто</button>`;
+    $('doneOv').style.display = 'flex';
+  } else toast('Записано ✓');
+}
+function deleteEntry(){
+  if(!ed.id || !confirm('Видалити цей запис?')) return;
+  entries = entries.filter(x => x.id !== ed.id); persist();
+  $('entryOv').style.display = 'none'; ed = null; renderDiary(); renderProgress(); toast('Видалено');
+}
+
+/* ================= PROGRESS ================= */
+let openKey = null, progKeys = [];
+function chartSVG(vals){
+  if(vals.length < 2) return '';
+  const W = 300, H = 96, P = 12, mn = Math.min(...vals), mx = Math.max(...vals), rg = (mx - mn) || 1;
+  const pts = vals.map((v, i) => [P + i * (W - 2*P) / (vals.length - 1), H - P - (v - mn) / rg * (H - 2*P)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = d + ` L${pts[pts.length-1][0].toFixed(1)} ${H} L${pts[0][0].toFixed(1)} ${H} Z`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;margin-top:14px">
+    <path d="${area}" fill="rgba(232,180,0,.13)"/><path d="${d}" fill="none" stroke="#e8b400" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i === pts.length-1 ? 5.5 : 3.5}" fill="${i === pts.length-1 ? '#e8b400' : '#1a1a1a'}" stroke="#e8b400" stroke-width="2"/>`).join('')}</svg>`;
+}
+function buildSeries(){
+  const map = {};
+  sortedAsc().forEach(e => e.exercises.forEach(x => {
+    const st = sessionStats(x); if(!st) return;
+    (map[x.key] = map[x.key] || {key:x.key, name:x.name, all:[]}).all.push({date:e.date, ex:x, st, entry:e});
+  }));
+  return Object.values(map).map(o => {
+    const cnt = {}; o.all.forEach(s => cnt[s.st.kind] = (cnt[s.st.kind] || 0) + 1);
+    const lastKind = o.all[o.all.length-1].st.kind;
+    const dom = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a] || (b === lastKind) - (a === lastKind))[0];
+    o.kind = dom; o.series = o.all.filter(s => s.st.kind === dom); return o;
+  }).sort((a, b) => b.all[b.all.length-1].date.localeCompare(a.all[a.all.length-1].date));
+}
+const KIND = {weight:'З ВАГОЮ · ГРАФІК — РОЗРАХУНКОВА СИЛА', reps:'ПОВТОРИ · ГРАФІК — НАЙКРАЩИЙ ПІДХІД', secs:'УТРИМАННЯ · ГРАФІК — НАЙДОВШЕ УТРИМАННЯ'};
+const KUNIT = {weight:'кг', reps:'повт', secs:'сек'};
+function metricText(kind, v){ return kind === 'weight' ? `≈ ${v} кг` : `${v} ${KUNIT[kind]}`; }
+function insights(items){
+  const out = [];
+  items.forEach(o => {
+    const s = o.series; if(s.length < 2) return;
+    const last = s[s.length-1], rec = Math.max(...s.map(x => x.st.metric));
+    const prevMax = Math.max(...s.slice(0, -1).map(x => x.st.metric));
+    if(last.st.metric > prevMax && daysAgo(last.date) <= 14) out.push({p:1, t:`🔥 <b>${esc(o.name)}</b> — новий рекорд: ${esc(last.st.label)}`});
+    const ref = [...s].reverse().find(x => daysAgo(x.date) - daysAgo(last.date) >= 28) || s[0];
+    if(ref !== last && ref.st.metric > 0){
+      const pct = Math.round((last.st.metric - ref.st.metric) / ref.st.metric * 100);
+      if(pct > 0) out.push({p:2, t:`📈 <b>${esc(o.name)}</b>: +${pct}% за останній місяць`});
+      else if(pct < -5) out.push({p:4, t:`📉 <b>${esc(o.name)}</b>: ${pct}% до місяця тому`});
+    }
+    if(s.length >= 4){
+      const l3 = s.slice(-3).map(x => x.st.metric);
+      if(Math.max(...l3) < rec && s.findIndex(x => x.st.metric === rec) < s.length - 3) out.push({p:3, t:`⏸ <b>${esc(o.name)}</b>: останні 3 тренування без росту (рекорд був раніше)`});
+    }
+  });
+  const recent = sortedDesc().filter(e => daysAgo(e.date) <= 21);
+  const pain = recent.filter(e => e.feel === 'pain');
+  if(pain.length){
+    const withC = pain.find(e => e.comment);
+    out.push({p:2, t:`🤕 Щось боліло у <b>${pain.length}</b> з ${recent.length} останніх записів${withC ? ': «' + esc(withC.comment.split('\n')[0].slice(0, 70)) + '»' : ''}`});
+  }
+  return out.sort((a, b) => a.p - b.p).slice(0, 6);
+}
+function renderProgress(){
+  const items = buildSeries(); progKeys = items.map(o => o.key);
+  if(!items.length){ $('tab-progress').innerHTML = `<div class="empty">Тут з'явиться статистика — після першого запису.</div>`; return; }
+  const ins = insights(items);
+  let h = '';
+  if(ins.length) h += `<div class="lbl" style="margin-top:4px">ВИСНОВКИ</div><div class="card">${ins.map(i => `<div class="ins"><div>${i.t}</div></div>`).join('')}</div>`;
+  h += `<div class="lbl">ПО ВПРАВАХ</div>`;
+  h += items.map((o, idx) => {
+    const s = o.series, first = s[0], last = s[s.length-1];
+    const rec = s.reduce((m, x) => x.st.metric > m.st.metric ? x : m, s[0]);
+    const diff = s.length > 1 ? last.st.metric - first.st.metric : null;
+    const pct = (diff !== null && first.st.metric > 0) ? Math.round(diff / first.st.metric * 100) : null;
+    const vals = s.slice(-12).map(x => x.st.metric);
+    let c = `<div class="card pg" onclick="toggleProg(${idx})">
+      <div class="name">${esc(o.name)}</div><div class="kind">${KIND[o.kind]}</div>
+      <div class="row">
+        <div><small>РЕКОРД</small>${esc(rec.st.label)}</div>
+        <div><small>ОСТАННІЙ РАЗ</small>${esc(last.st.label)}</div>
+        ${pct !== null ? `<div class="${pct > 0 ? 'up' : (pct < 0 ? 'down' : '')}"><small>ЗМІНА З ПОЧАТКУ</small>${pct > 0 ? '+' : ''}${pct}%</div>` : ''}
+      </div>
+      ${chartSVG(vals) || '<div class="chartcap" style="margin-top:12px">Для графіка треба хоча б два тренування з цією вправою.</div>'}
+      <div class="chartcap">${s.length} ${s.length === 1 ? 'тренування' : 'тренувань'} · від ${esc(fmtDate(first.date))} до ${esc(fmtDate(last.date))}${o.kind === 'weight' ? ` · сила ${metricText('weight', first.st.metric)} → ${metricText('weight', last.st.metric)}` : ''}</div>
+      <div class="tap">${openKey === o.key ? '▲ сховати історію' : '▼ історія і відео'}</div>`;
+    if(openKey === o.key){
+      const gal = [];
+      [...o.all].reverse().forEach(x => x.ex.sets.forEach((s, i) => {
+        ((x.entry.media && x.entry.media[o.key + '#' + i]) || []).forEach(m => gal.push({m, label:setLabel(s), date:x.date}));
+      }));
+      if(gal.length) c += `<div class="lbl" onclick="event.stopPropagation()">ВІДЕО ПО ПІДХОДАХ</div><div class="gal" onclick="event.stopPropagation()">${gal.map(g => `<div>${thumb(g.m)}<div class="gcap">${esc(g.label)}<br>${esc(fmtDate(g.date))}</div></div>`).join('')}</div>`;
+      c += `<div class="hist">` + [...o.all].reverse().map(x => {
+        return `<div class="h"><b>${esc(fmtDate(x.date))}</b><div class="chips">${x.ex.sets.map(chipHTML).join('')}</div>${setMediaHTML(x.entry, x.ex)}</div>`;
+      }).join('') + `</div>`;
+      const others = items.filter(z => z.key !== o.key);
+      if(others.length){
+        c += `<div class="merge" onclick="event.stopPropagation()">
+          <div class="s" style="color:var(--dim)">Написав цю вправу по-різному? Склей її з іншою:</div>
+          <select class="field" id="mg_${esc(o.key.replace(/\s/g, '_'))}">${others.map(z => `<option value="${esc(z.key)}">${esc(z.name)}</option>`).join('')}</select>
+          <button class="btn ghost small" style="margin-top:8px" onclick="doMerge('${esc(o.key)}')">Об'єднати</button></div>`;
+      }
+    }
+    return c + `</div>`;
+  }).join('');
+  const al = Object.entries(aliases);
+  if(al.length) h += `<div class="lbl">ОБ'ЄДНАНІ НАЗВИ (так я розумію твої записи)</div><div class="card">${al.map(([k, v]) => `<div class="ins"><div>«${esc(k)}» → <b>${esc(v)}</b></div></div>`).join('')}</div>`;
+  $('tab-progress').innerHTML = h;
+}
+function toggleProg(i){ const k = progKeys[i]; openKey = openKey === k ? null : k; renderProgress(); }
+
+/* ================= boot ================= */
+renderDiary(); renderProgress();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+if(!CODE) showLogin(''); else { setSync(dirty ? 'wait' : 'ok'); sync(); }
+</script>
+</body>
+</html>
