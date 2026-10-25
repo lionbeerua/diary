@@ -145,6 +145,14 @@
   #login .box{width:100%;max-width:360px}
   .setbox{background:var(--card);border:2px solid var(--line);border-radius:6px;padding:16px;margin-top:14px}
   .setbox p{color:var(--dim);font-size:14px;line-height:1.5;margin-bottom:10px}
+  .dots{display:flex;justify-content:center;gap:16px;margin:26px 0 8px}
+  .dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--mute)}
+  .dots i.on{background:var(--y);border-color:var(--y)}
+  .dots.shake{animation:sh .35s}@keyframes sh{20%{transform:translateX(-10px)}60%{transform:translateX(10px)}}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+  .pad button{height:76px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--text);font:700 30px 'Montserrat',sans-serif}
+  .pad button:active{background:var(--y);color:var(--ink);border-color:var(--y)}
+  .pad .sec{background:transparent;border-color:transparent;font-size:26px}.pad .ok{color:var(--y)}
 </style>
 </head>
 <body>
@@ -204,11 +212,15 @@
 <div class="ov" id="doneOv"><div id="doneBody" style="max-width:420px;width:100%"></div></div>
 
 <div id="login"><div class="box">
-  <div class="head" style="font-size:26px;margin-bottom:6px">Щоденник тренувань</div>
-  <p style="color:var(--dim);margin-bottom:18px;line-height:1.5">Введи код доступу. Він зберігається на цьому пристрої, питати знову не буде.</p>
-  <input class="field" id="codeInput" type="password" placeholder="Код доступу" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-  <div id="loginErr" style="color:var(--red);font-size:14px;margin-top:8px;min-height:18px"></div>
-  <button class="btn" style="margin-top:10px" onclick="doLogin()">Увійти</button>
+  <div class="head" style="font-size:24px;text-align:center">Щоденник тренувань</div>
+  <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+  <div id="loginErr" style="color:var(--red);font-size:14px;text-align:center;min-height:20px"></div>
+  <div class="pad">
+    <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button><button onclick="padKey('3')">3</button>
+    <button onclick="padKey('4')">4</button><button onclick="padKey('5')">5</button><button onclick="padKey('6')">6</button>
+    <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button><button onclick="padKey('9')">9</button>
+    <button class="sec" onclick="padDel()">⌫</button><button onclick="padKey('0')">0</button><button class="sec ok" onclick="doLogin()">✓</button>
+  </div>
 </div></div>
 
 <div class="sheet" id="mediaSheet" onclick="closeSheet()"><div class="sheetbox" onclick="event.stopPropagation()">
@@ -303,7 +315,7 @@ async function sync(manual){
     for(let t = 0; t < 3; t++){
       if(!dirty){
         const s = await (await api('/api/state')).json();
-        if(s.rev !== rev){ mergeState(s); rev = s.rev; }
+        if(s.rev !== rev || !entries.length){ mergeState(s); rev = s.rev; }
         break;
       }
       const r = await api('/api/state', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({baseRev: rev, entries, aliases, deleted})});
@@ -316,17 +328,22 @@ async function sync(manual){
   }catch(e){ setSync(e.message === 'auth' ? 'auth' : 'off'); if(manual && e.message !== 'auth') toast('Немає зв\'язку із сервером'); }
   syncing = false; saveLocal(); renderDiary(); renderProgress();
 }
-function showLogin(msg){ $('login').style.display = 'flex'; $('loginErr').textContent = msg || ''; setTimeout(() => $('codeInput').focus(), 50); }
+function showLogin(msg){ $('login').style.display = 'flex'; $('loginErr').textContent = msg || ''; }
+let codeVal = '';
+function drawDots(){ document.querySelectorAll('#dots i').forEach((d, i) => d.classList.toggle('on', i < codeVal.length)); }
+function padKey(k){ if(codeVal.length >= 12) return; codeVal += k; drawDots(); $('loginErr').textContent = ''; if(codeVal.length === 4) doLogin(); }
+function padDel(){ codeVal = codeVal.slice(0, -1); drawDots(); }
+function loginFail(msg){ $('loginErr').textContent = msg; $('dots').classList.add('shake'); setTimeout(() => $('dots').classList.remove('shake'), 400); codeVal = ''; drawDots(); }
 async function doLogin(){
-  const v = $('codeInput').value.trim(); if(!v) return;
-  CODE = v; $('loginErr').textContent = 'Перевіряю…';
+  if(!codeVal) return;
+  CODE = codeVal; $('loginErr').textContent = 'Перевіряю…';
   try{
     const r = await fetch(API_BASE + '/api/state', {headers: {'X-Access-Code': CODE}});
-    if(r.status === 401){ $('loginErr').textContent = 'Невірний код'; return; }
+    if(r.status === 401){ loginFail('Невірний код'); return; }
     if(!r.ok) throw 0;
-    lsSet('tl4_code', CODE); $('login').style.display = 'none'; $('codeInput').value = '';
+    lsSet('tl4_code', CODE); $('login').style.display = 'none'; codeVal = ''; drawDots(); $('loginErr').textContent = '';
     sync();
-  }catch(e){ $('loginErr').textContent = 'Немає зв\'язку із сервером. Перевір інтернет.'; }
+  }catch(e){ loginFail('Немає зв\'язку із сервером'); }
 }
 function logout(){
   if(!confirm('Вийти? Дані на сервері лишаться, але на цьому пристрої доведеться ввести код знову.')) return;
@@ -605,6 +622,8 @@ function insertName(key){
 
 /* ================= media (files in R2 via Worker, or a YouTube link) ================= */
 const mediaReg = {};
+const VID_EXT = /\.(mp4|mov|m4v|webm|3gp|mkv|avi)(\?|$)/i;
+const isVid = m => (m.type || '').startsWith('video') || VID_EXT.test(m.url || '');
 const ytId = u => { const m = String(u).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/); return m ? m[1] : null; };
 async function shrinkImage(file){
   try{
@@ -617,7 +636,8 @@ async function shrinkImage(file){
   }catch(e){ return file; }
 }
 async function uploadFile(file){
-  let blob = file, type = file.type || 'application/octet-stream';
+  let blob = file, type = file.type || '';
+  if(!type){ const x = (file.name.split('.').pop() || '').toLowerCase(); type = ({mp4:'video/mp4', mov:'video/quicktime', m4v:'video/mp4', webm:'video/webm', '3gp':'video/3gpp', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', heic:'image/heic'})[x] || 'application/octet-stream'; }
   if(type.startsWith('image/') && type !== 'image/gif'){ blob = await shrinkImage(file); type = blob.type || type; }
   if(blob.size > 95 * 1024 * 1024) throw new Error('big');
   const r = await api('/api/media', {method:'POST', headers:{'Content-Type': type, 'X-File-Name': encodeURIComponent(file.name || 'file')}, body: blob});
@@ -626,9 +646,8 @@ async function uploadFile(file){
 }
 function thumb(m, rm){
   mediaReg[m.id] = m;
-  const isVid = (m.type || '').startsWith('video');
   const inner = m.kind === 'yt' ? `<img src="https://i.ytimg.com/vi/${esc(m.ytId)}/hqdefault.jpg" loading="lazy"><div class="play">▶</div><div class="ytb">YouTube</div>`
-    : isVid ? `<video src="${esc(m.url)}#t=0.1" muted playsinline preload="metadata"></video><div class="play">▶</div>`
+    : isVid(m) ? `<video src="${esc(m.url)}#t=0.1" muted playsinline preload="metadata"></video><div class="play">▶</div>`
     : `<img src="${esc(m.url)}" loading="lazy">`;
   return `<div class="thumb" onclick="event.stopPropagation();openLightbox('${m.id}')">${inner}${rm ? `<button class="x" onclick="event.stopPropagation();removeMedia('${rm.key}',${rm.i})">✕</button>` : ''}</div>`;
 }
@@ -636,7 +655,7 @@ function openLightbox(id){
   const m = mediaReg[id]; if(!m) return;
   const lb = $('lightbox');
   if(m.kind === 'yt') lb.innerHTML = `<div style="width:100%;max-width:520px" onclick="event.stopPropagation()"><iframe src="https://www.youtube-nocookie.com/embed/${esc(m.ytId)}?autoplay=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe><a href="https://youtu.be/${esc(m.ytId)}" target="_blank" rel="noopener">Відкрити в YouTube ↗</a></div>`;
-  else if((m.type || '').startsWith('video')) lb.innerHTML = `<video src="${esc(m.url)}" controls autoplay playsinline onclick="event.stopPropagation()"></video>`;
+  else if(isVid(m)) lb.innerHTML = `<div style="width:100%;max-width:520px;text-align:center" onclick="event.stopPropagation()"><video src="${esc(m.url)}" controls autoplay playsinline style="max-width:100%;max-height:80vh" onerror="this.nextElementSibling.style.display='block'"></video><div style="display:none;color:var(--red);margin-top:10px;font-size:14px">Цей телефон не вміє відтворити формат відео.<br><a href="${esc(m.url)}" target="_blank" rel="noopener">Відкрити файл ↗</a></div><a href="${esc(m.url)}" target="_blank" rel="noopener">Відкрити файл ↗</a></div>`;
   else lb.innerHTML = `<img src="${esc(m.url)}">`;
   lb.style.display = 'flex';
 }
