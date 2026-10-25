@@ -153,6 +153,8 @@
   .pad button{height:76px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--text);font:700 30px 'Montserrat',sans-serif}
   .pad button:active{background:var(--y);color:var(--ink);border-color:var(--y)}
   .pad .sec{background:transparent;border-color:transparent;font-size:26px}.pad .ok{color:var(--y)}
+  .mhead{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;padding:12px 14px;background:var(--card2);border-left:4px solid var(--y);border-radius:4px;font:800 14px 'Montserrat',sans-serif;letter-spacing:.04em;cursor:pointer}
+  .mhead b{color:var(--y)}
 </style>
 </head>
 <body>
@@ -255,8 +257,8 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const todayISO = () => new Date().toLocaleDateString('sv-SE');
-const fmtDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('uk-UA', {day:'numeric', month:'long'});
-const fmtDateLong = iso => new Date(iso + 'T00:00:00').toLocaleDateString('uk-UA', {weekday:'long', day:'numeric', month:'long'});
+const fmtDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('uk-UA', {day:'numeric', month:'long', year:'numeric'});
+const fmtDateLong = iso => new Date(iso + 'T00:00:00').toLocaleDateString('uk-UA', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 const fmtTime = s => Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
 const round1 = x => Math.round(x*10)/10;
 const num = x => parseFloat(String(x).replace(',', '.'));
@@ -639,6 +641,7 @@ async function uploadFile(file){
   let blob = file, type = file.type || '';
   if(!type){ const x = (file.name.split('.').pop() || '').toLowerCase(); type = ({mp4:'video/mp4', mov:'video/quicktime', m4v:'video/mp4', webm:'video/webm', '3gp':'video/3gpp', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', heic:'image/heic'})[x] || 'application/octet-stream'; }
   if(type.startsWith('image/') && type !== 'image/gif'){ blob = await shrinkImage(file); type = blob.type || type; }
+  if(type === 'video/quicktime') type = 'video/mp4';   // .mov з Mac: Android-Chrome надійніше грає під типом mp4
   if(blob.size > 95 * 1024 * 1024) throw new Error('big');
   const r = await api('/api/media', {method:'POST', headers:{'Content-Type': type, 'X-File-Name': encodeURIComponent(file.name || 'file')}, body: blob});
   const j = await r.json(); if(!j.url) throw new Error('upload');
@@ -655,7 +658,7 @@ function openLightbox(id){
   const m = mediaReg[id]; if(!m) return;
   const lb = $('lightbox');
   if(m.kind === 'yt') lb.innerHTML = `<div style="width:100%;max-width:520px" onclick="event.stopPropagation()"><iframe src="https://www.youtube-nocookie.com/embed/${esc(m.ytId)}?autoplay=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe><a href="https://youtu.be/${esc(m.ytId)}" target="_blank" rel="noopener">Відкрити в YouTube ↗</a></div>`;
-  else if(isVid(m)) lb.innerHTML = `<div style="width:100%;max-width:520px;text-align:center" onclick="event.stopPropagation()"><video src="${esc(m.url)}" controls autoplay playsinline style="max-width:100%;max-height:80vh" onerror="this.nextElementSibling.style.display='block'"></video><div style="display:none;color:var(--red);margin-top:10px;font-size:14px">Цей телефон не вміє відтворити формат відео.<br><a href="${esc(m.url)}" target="_blank" rel="noopener">Відкрити файл ↗</a></div><a href="${esc(m.url)}" target="_blank" rel="noopener">Відкрити файл ↗</a></div>`;
+  else if(isVid(m)) lb.innerHTML = `<div style="width:100%;max-width:520px;text-align:center" onclick="event.stopPropagation()"><video src="${esc(m.url)}" controls autoplay playsinline style="max-width:100%;max-height:80vh" onerror="var n=this.nextElementSibling;n.style.display='block';n.insertAdjacentText('afterbegin','[код '+(this.error?this.error.code:'?')+'] ')"></video><div style="display:none;color:var(--red);margin-top:10px;font-size:14px">Цей телефон не вміє відтворити формат відео.<br><a href="${esc(m.url)}" target="_blank" rel="noopener">Відкрити файл ↗</a></div><a href="${esc(m.url)}" target="_blank" rel="noopener">Відкрити файл ↗</a></div>`;
   else lb.innerHTML = `<img src="${esc(m.url)}">`;
   lb.style.display = 'flex';
 }
@@ -674,6 +677,8 @@ document.querySelectorAll('.nav button').forEach(b => b.onclick = () => {
 
 /* ================= DIARY ================= */
 const FEEL = {great:'🔥 Супер', ok:'🙂 Нормально', tired:'😴 Втома', pain:'🤕 Щось болить'};
+const monthState = {};
+function toggleMonth(k){ const cur = k in monthState ? monthState[k] : null; if(cur === null){ const list = sortedDesc(); const recent = [...new Set(list.map(e => e.date.slice(0, 7)))].slice(0, 2); monthState[k] = !recent.includes(k); } else monthState[k] = !cur; renderDiary(); }
 function renderDiary(){
   const list = sortedDesc();
   const in30 = list.filter(e => daysAgo(e.date) <= 30);
@@ -682,7 +687,18 @@ function renderDiary(){
   if(list.length) h += `<div class="stats"><div class="stat"><b>${in30.length}</b><span>тренувань за 30 днів</span></div><div class="stat"><b>${prs30}</b><span>рекордів за 30 днів</span></div></div>`;
   h += `<div class="lbl">МОЇ ЗАПИСИ</div>`;
   if(!list.length) h += `<div class="empty">Тут буде твій щоденник.<br>Натисни «Записати тренування» і напиши як у нотатках: <span class="mono" style="color:var(--y)">підтягування +36кг 5 раз</span></div>`;
+  const MN = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const mk = d => d.slice(0, 7), cnt = {}; list.forEach(e => cnt[mk(e.date)] = (cnt[mk(e.date)] || 0) + 1);
+  const recent = [...new Set(list.map(e => mk(e.date)))].slice(0, 2);
+  const isOpen = k => k in monthState ? monthState[k] : recent.includes(k);
+  let curM = '';
   list.forEach(e => {
+    const k = mk(e.date);
+    if(k !== curM){
+      curM = k;
+      h += `<div class="mhead" onclick="toggleMonth('${k}')"><span>${isOpen(k) ? '▾' : '▸'} ${MN[+k.slice(5) - 1].toUpperCase()} ${k.slice(0, 4)}</span><b>${cnt[k]}</b></div>`;
+    }
+    if(!isOpen(k)) return;
     h += `<div class="card" onclick="openEntry('${e.id}')">
       ${e.feel ? `<span class="feelbadge">${FEEL[e.feel] || ''}</span>` : ''}
       <div class="t">${esc(cap(fmtDateLong(e.date)))}${e.sample ? '<span class="sample">ПРИКЛАД</span>' : ''}</div>`;
